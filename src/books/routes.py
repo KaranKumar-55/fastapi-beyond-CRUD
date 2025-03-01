@@ -1,28 +1,58 @@
-from fastapi import APIRouter, status
-import src.books.schemas as schemas
+from fastapi import APIRouter, status, Depends, HTTPException
 from typing import List
+from src.db.main import get_session
+from sqlmodel.ext.asyncio.session import AsyncSession
+from src.books.service import BookService
+from src.books.schemas import Book, UpdateBookModel, BookCreateModel
 
 
 book_router = APIRouter()
+book_service = BookService()
 
-@book_router.get('', response_model=List[schemas.Book])
-async def get_all_books():
-    pass
 
-@book_router.post('', status_code=status.HTTP_201_CREATED)
-async def create_a_book(book_data:schemas.Book):
-    new_book = book_data
+#show all books
+@book_router.get('', response_model=List[Book])
+async def get_all_books(session:AsyncSession = Depends(get_session)):
+    books = await book_service.get_all_books(session)
+    return books
+
+
+## create a new book
+@book_router.post('', status_code=status.HTTP_201_CREATED, response_model= Book)
+async def create_a_book(book_data:BookCreateModel, session:AsyncSession = Depends(get_session))-> dict:
+    new_book = await book_service.create_book(book_data, session)
     return new_book
 
+ 
 
+ ## fetch a book with book_uid
 @book_router.get('/{book_id}')
-async def get_book(book_id:int):
-    pass
+async def get_book(book_uid:int, session:AsyncSession = Depends(get_session))->dict:
+    book = await book_service.get_book(book_uid, session)
+    if book:
+        return book
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"book with id {book_uid} not available")
 
-@book_router.put('/{book_id}')
-async def update_book(book_id:int, book_update_data:schemas.UpdateBook):
-    pass
 
-@book_router.delete('/{book_id}')
-async def delete_book(book_id:int):
-    pass
+
+## Update a book with book_uid
+@book_router.patch('/{book_uid}')
+async def update_book(book_uid:int, book_update_data:UpdateBookModel,session:AsyncSession = Depends(get_session))->dict:
+    updated_book = await book_service.update_book(book_uid, book_update_data, session)
+    if updated_book:
+        return updated_book
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"book with id {book_uid} not available")
+
+
+
+## delete book with book_uid
+@book_router.delete('/{book_uid}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_book(book_uid:int, session: AsyncSession = Depends(get_session)):
+    book_to_delete = await book_service.delete_book(book_uid, session)
+    if book_to_delete:
+        return "delete successfully"
+    else:
+       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"book with id {book_uid} not available")
+    

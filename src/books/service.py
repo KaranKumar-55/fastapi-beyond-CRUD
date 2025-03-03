@@ -40,7 +40,7 @@ class BookService:
 
     async def update_book(self, book_uid:str, update_data:UpdateBookModel,  session: AsyncSession):
         
-        book_to_update = self.get_book(book_uid, session)
+        book_to_update = await self.get_book(book_uid, session)
 
         if book_to_update is not None:
             update_data_dict = update_data.model_dump()
@@ -57,7 +57,7 @@ class BookService:
 
 
     async def delete_book(self, book_uid:str, session: AsyncSession):
-        book_to_delete = self.get_book(book_uid, session)
+        book_to_delete =await self.get_book(book_uid, session)
         if book_to_delete is not None:
             await session.delete(book_to_delete)
             await session.commit()

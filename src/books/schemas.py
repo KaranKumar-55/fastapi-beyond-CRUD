@@ -23,7 +23,6 @@ class BookCreateModel(BaseModel):
     language: str
 
 
-
 class UpdateBookModel(BaseModel):
     title: str
     author: str

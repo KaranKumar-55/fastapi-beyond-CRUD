@@ -48,14 +48,11 @@ async def update_book(book_uid:str, book_update_data:UpdateBookModel,session:Asy
         
 
 
-
 ## delete book with book_uid
-@book_router.delete('/{book_uid}', status_code=status.HTTP_204_NO_CONTENT)
+@book_router.delete('/{book_uid}', status_code=status.HTTP_200_OK)
 async def delete_book(book_uid:str, session: AsyncSession = Depends(get_session)):
     book_to_delete = await book_service.delete_book(book_uid, session)
     if book_to_delete is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"book with id {book_uid} not available")
-    else:
-        return "delete successfully"
-       
     
+    return "delete successfully"
